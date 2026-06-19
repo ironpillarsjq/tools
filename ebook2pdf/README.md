@@ -1,4 +1,4 @@
-# MobiToPDF GUI
+# ebook2pdf GUI
 
 一个简单的 Python GUI 工具：将 `.mobi` `.epub` 电子书转换为 `.pdf`，支持：
 

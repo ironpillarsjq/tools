@@ -1,0 +1,259 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>圣经章数计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", sans-serif;
+            background: #f5f0e8;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px 24px;
+            max-width: 480px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 22px;
+            color: #5a3e2b;
+            margin-bottom: 6px;
+        }
+
+        .instruction {
+            text-align: center;
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 24px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section-label {
+            font-size: 15px;
+            font-weight: bold;
+            color: #5a3e2b;
+            margin-bottom: 8px;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .row select {
+            flex: 1;
+            padding: 10px 12px;
+            font-size: 15px;
+            border: 1px solid #d4c5b2;
+            border-radius: 8px;
+            background: #fff;
+            color: #333;
+            appearance: auto;
+        }
+
+        .row select:focus {
+            outline: none;
+            border-color: #8b6f4e;
+        }
+
+        .divider {
+            text-align: center;
+            padding: 8px 0;
+            font-size: 20px;
+            color: #aaa;
+        }
+
+        .btn-calc {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            font-size: 17px;
+            font-weight: bold;
+            color: #fff;
+            background: #8b6f4e;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .btn-calc:hover {
+            background: #6d563c;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: center;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .result.wrap {
+            background: #fff8e1;
+            color: #5d4037;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px 16px;
+            }
+
+            h1 {
+                font-size: 19px;
+            }
+
+            .row {
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .row select {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>圣经章数计算器</h1>
+        <p class="instruction">选择起始和结束的经文位置，计算两者之间共有几章</p>
+
+        <div class="section">
+            <div class="section-label">起始位置</div>
+            <div class="row">
+                <select id="startBook"></select>
+                <select id="startChapter"></select>
+            </div>
+        </div>
+
+        <div class="divider">↓</div>
+
+        <div class="section">
+            <div class="section-label">结束位置</div>
+            <div class="row">
+                <select id="endBook"></select>
+                <select id="endChapter"></select>
+            </div>
+        </div>
+
+        <button class="btn-calc" onclick="onCalculate()">计 算</button>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script src="bible-data.js"></script>
+    <script src="calculator.js"></script>
+    <script>
+        // 初始化下拉菜单
+        function initSelectors() {
+            var startBook = document.getElementById("startBook");
+            var endBook = document.getElementById("endBook");
+
+            for (var i = 0; i < BIBLE_BOOKS.length; i++) {
+                var option = document.createElement("option");
+                option.value = i;
+                option.textContent = BIBLE_BOOKS[i].name;
+                startBook.appendChild(option);
+                endBook.appendChild(option.cloneNode(true));
+            }
+
+            // 默认选中第一卷书
+            startBook.value = "0";
+            endBook.value = "0";
+
+            // 初始化章节下拉菜单
+            updateChapters("startChapter", 0);
+            updateChapters("endChapter", 0);
+        }
+
+        // 动态更新章节下拉菜单
+        function updateChapters(selectId, bookIndex) {
+            var select = document.getElementById(selectId);
+            var currentValue = select.value;
+            var maxChapters = BIBLE_BOOKS[bookIndex].chapters;
+
+            select.innerHTML = "";
+            for (var i = 1; i <= maxChapters; i++) {
+                var option = document.createElement("option");
+                option.value = i;
+                option.textContent = i + "章";
+                select.appendChild(option);
+            }
+
+            // 尝试恢复之前选中的章节（若还在范围内）
+            if (parseInt(currentValue) <= maxChapters) {
+                select.value = currentValue;
+            } else {
+                select.value = "1";
+            }
+        }
+
+        // 书卷选择变化事件
+        document.getElementById("startBook").addEventListener("change", function() {
+            updateChapters("startChapter", parseInt(this.value));
+        });
+
+        document.getElementById("endBook").addEventListener("change", function() {
+            updateChapters("endChapter", parseInt(this.value));
+        });
+
+        // 执行计算
+        function onCalculate() {
+            var startBookIndex = parseInt(document.getElementById("startBook").value);
+            var startChapter = parseInt(document.getElementById("startChapter").value);
+            var endBookIndex = parseInt(document.getElementById("endBook").value);
+            var endChapter = parseInt(document.getElementById("endChapter").value);
+
+            var result = calculateChapters(startBookIndex, startChapter, endBookIndex, endChapter);
+            var resultDiv = document.getElementById("result");
+
+            var startBookName = BIBLE_BOOKS[startBookIndex].name;
+            var endBookName = BIBLE_BOOKS[endBookIndex].name;
+            var text = startBookName + startChapter + "章 到 " + endBookName + endChapter + "章 = 共" + result.total + "章";
+
+            if (result.wrap) {
+                resultDiv.className = "result wrap";
+                resultDiv.innerHTML = text + '<br><small>已读完全本，从开头继续</small>';
+            } else {
+                resultDiv.className = "result success";
+                resultDiv.textContent = text;
+            }
+        }
+
+        // 页面加载时初始化
+        initSelectors();
+    </script>
+</body>
+</html>
